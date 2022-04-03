@@ -1,18 +1,18 @@
 // deep clone
 const deepClone = function(obj) {
-	if (!obj) return obj
+  if (!obj) return obj
 
-	let newObj = Array.isArray ? [] : {}
-	for (let key in obj) {
-		let val = obj[key]
-		if (typeof val === 'object') {
-			newObj[key] = deepClone(val)
-		} else {
-			newObj[key] = val
-		}
-	}
+  let newObj = Array.isArray ? [] : {}
+  for (let key in obj) {
+    let val = obj[key]
+    if (typeof val === 'object') {
+      newObj[key] = deepClone(val)
+    } else {
+      newObj[key] = val
+    }
+  }
 
-	return newObj
+  return newObj
 }
 const target = {
   name: 'ABC',
@@ -88,144 +88,152 @@ console.log(deepClone(a))
 
 // debounce
 const debounce = function(fn, timeout = 300) {
-	let timer = null
+  let timer = null
 
-	return function(...args) {
-		clearTimeout(timer)
-		timer = setTimeout(() => {
-			fn.apply(this, args)
-		}, timeout)
-	}
+  return function(...args) {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      fn.apply(this, args)
+    }, timeout)
+  }
 }
 function saveInput(id){
   console.log('Saving data', id);
 }
 const testDebounce = debounce((id) => saveInput(id));
 setInterval(() => {
-	testDebounce(12)
+  testDebounce(12)
 }, 250)
 
 // throttle
 const throttle = function(fn, timeout = 500) {
-	let waiting = false
+  let waiting = false
 
-	return function(...args) {
-		if (waiting) return
-		waiting = true
-		fn.apply(this, args)
-		setTimeout(() => {
-			waiting = false
-		}, timeout)
-	}
+  return function(...args) {
+    if (waiting) return
+    waiting = true
+    fn.apply(this, args)
+    setTimeout(() => {
+      waiting = false
+    }, timeout)
+  }
 }
 function saveInput(id){
   console.log('Saving data', id);
 }
 const testThrottle = throttle((id) => saveInput(id));
 setInterval(() => {
-	testThrottle(15)
+  testThrottle(15)
 }, 250)
 
 // promise all
 const promiseAll = function(inputs) {
-	return new Promise((resolve, reject) => {
-		let length = inputs.length
-		let count = 0
-		let data = []
-		for (let fn of inputs) {
-			fn.apply(this)
-			.then((res) => {
-				count++
-				data.push(res)
-				if (count === length) resolve(data)
-			}).catch((err) => {
-				reject(err)
-			})
-		}
-	})
+  return new Promise((resolve, reject) => {
+    let length = inputs.length
+    let count = 0
+    let data = []
+    for (let fn of inputs) {
+      fn.apply(this)
+      .then((res) => {
+        count++
+        data.push(res)
+        if (count === length) resolve(data)
+      }).catch((err) => {
+        reject(err)
+      })
+    }
+  })
 }
 const request = function(id) {
-	return new Promise((resolve, reject) => {
-	   let timeout = Math.floor(Math.random() * 1000) + 500
+  return new Promise((resolve, reject) => {
+     let timeout = Math.floor(Math.random() * 1000) + 500
        setTimeout(() => {
            resolve(`${id}: ${timeout}ms`);
        }, timeout);
-	})
+  })
 }
 let inputs = []
 for (let i = 0; i < 22; i++) {
-	inputs.push(() => request(i))
+  inputs.push(() => request(i))
 }
 promiseAll(inputs)
 .then((res) => {
-	console.log('promiseAll', res)
+  console.log('promiseAll', res)
 })
 
 // promise race
 const promiseRace = function(inputs) {
-	return new Promise((resolve, reject) => {
-		for (let fn of inputs) {
-			fn.apply(this)
-			.then((res) => {
-				resolve(res)
-			}).catch((err) => {
-				reject(err)
-			})
-		}
-	})
+  return new Promise((resolve, reject) => {
+    for (let fn of inputs) {
+      fn.apply(this)
+      .then((res) => {
+        resolve(res)
+      }).catch((err) => {
+        reject(err)
+      })
+    }
+  })
 }
 promiseRace(inputs)
 .then((res) => {
-	console.log('promiseRace', res)
+  console.log('promiseRace', res)
 })
 
 // promise schedule
 const Scheduler = function(max = 3) {
-	let currentJobs = 0
-	let queue = []
+  let currentJobs = 0
+  let queue = []
 
-	function start() {
-		if (queue.length === 0 || currentJobs >= max) return
+  function start() {
+    if (queue.length === 0 || currentJobs >= max) return
 
-		currentJobs++
-		let [fn, resolve, reject] = queue.shift()
-		fn.apply(this).then((res) => {
-			currentJobs--
-			start()
-			resolve(res)
-		}).catch((err) => {
-			currentJobs--
-			start()
-			reject(err)
-		})
-	}
+    currentJobs++
+    let [fn, resolve, reject] = queue.shift()
+    fn.apply(this).then((res) => {
+      currentJobs--
+      start()
+      resolve(res)
+    }).catch((err) => {
+      currentJobs--
+      start()
+      reject(err)
+    })
+  }
 
-	return function(fn) {
-		return new Promise((resolve, reject) => {
-			queue.push([fn, resolve, reject])
-			start()
-		})
-	}
+  return function(fn) {
+    return new Promise((resolve, reject) => {
+      queue.push([fn, resolve, reject])
+      start()
+    })
+  }
 }
-let scheduler = Scheduler(6)
+const scheduler = Scheduler(6)
+const request = function(id) {
+  return new Promise((resolve, reject) => {
+     let timeout = Math.floor(Math.random() * 1000) + 500
+       setTimeout(() => {
+           resolve(`${id}: ${timeout}ms`);
+       }, timeout);
+  })
+}
 for (let i = 0; i < 25; i++) {
-	scheduler(() => request(i))
+  scheduler(() => request(i))
     .then((res) => {
-		console.log('scheduler', res)
-	})
+    console.log('scheduler', res)
+  })
 }
 
 // my reduce
 Array.prototype.myReduce = function(fn, initialValue) {
-	let nums = this
-	let res = 0
-	if (initialValue) res = initialValue
+  let nums = this
+  let res = 0
+  if (initialValue) res = initialValue
 
-	for (let i = 0; i < nums.length; i++) {
-		res = fn(res, nums[i])
-	}
+  for (let i = 0; i < nums.length; i++) {
+    res = fn(res, nums[i])
+  }
 
-	return res
+  return res
 }
 let arr = [1,2,3,4,3,1]
 let myReduceRes = arr.myReduce((a, b) => {
@@ -239,46 +247,46 @@ console.log('reduce', reduceRes)
 
 // my AJAX 
 function ajax(method, url, body = {}) {
-	return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     // 0. create XMLHttpRequest instance
-		let xhr = new XMLHttpRequest()
-		// 1. define request
-		xhr.open(method, url, true)
+    let xhr = new XMLHttpRequest()
+    // 1. define request
+    xhr.open(method, url, true)
     // xhr.setRequestHeader("Content-Type", "application/json");
-		// 2. define response
-		xhr.onload = () => {
-			if (xhr.status >= 200 && xhr.status < 300) {
-				let res = xhr.response
-				resolve(res)
-			} else {
-				reject()
-			}
-		}
-		// 3. define error
-		xhr.onerror = () => {
-			reject()
-		}
-		// 4. send request
-		xhr.send() // get
-		// xhr.send(body) // post
-	})
+    // 2. define response
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        let res = xhr.response
+        resolve(res)
+      } else {
+        reject()
+      }
+    }
+    // 3. define error
+    xhr.onerror = () => {
+      reject()
+    }
+    // 4. send request
+    xhr.send() // get
+    // xhr.send(body) // post
+  })
 }
 ajax('GET', 'https://ipv4.icanhazip.com/')
 .then((res) => {
-	console.log(res)
+  console.log(res)
 })
 
 // my instanceof
 const myInstanceof = function(original, target) {
-	let proto = original.__proto__
-	while (proto) {
-		if (proto === target.prototype) {
-			return true
-		}
-		proto = proto.__proto__
-	}
+  let proto = original.__proto__
+  while (proto) {
+    if (proto === target.prototype) {
+      return true
+    }
+    proto = proto.__proto__
+  }
 
-	return false
+  return false
 }
 const myInstanceofTest = [1,2,3]
 console.log(myInstanceof(myInstanceofTest, Array));  // true
@@ -301,14 +309,14 @@ console.log(myTypeof(new Date()))
 
 // my new
 const myNew = function(fn, ...args) {
-	let context = Object.create(fn.prototype)
-	let res = fn.apply(context, args)
-	// if res is undefined and nothing to return, return context
-	if (res instanceof Object) {
-		return res
-	} else {
-		return context
-	}
+  let context = Object.create(fn.prototype)
+  let res = fn.apply(context, args)
+  // if res is undefined and nothing to return, return context
+  if (res instanceof Object) {
+    return res
+  } else {
+    return context
+  }
 }
 function Person(name, age) {
   this.name = name;
@@ -319,52 +327,52 @@ console.log(person)
 
 // my call
 Function.prototype.myCall = function(context, ...args) {
-	let obj = context || window
-	obj.fn = this
-	let res = obj.fn(...args)
-	delete obj.fn
-	return res
+  let obj = context || window
+  obj.fn = this
+  let res = obj.fn(...args)
+  delete obj.fn
+  return res
 }
 
 // my apply
 Function.prototype.myApply = function(context, arr) {
-	// 定义 this，上下文
-	let obj = context || window
-	// 函数放进上下文的fn中
-	obj.fn = this
-	// 执行 fn，这样做fn就可以看到context了，闭包
-	let res = obj.fn(...arr)
-	// 要删除 fn
-	delete obj.fn
-	return res
+  // 定义 this，上下文
+  let obj = context || window
+  // 函数放进上下文的fn中
+  obj.fn = this
+  // 执行 fn，这样做fn就可以看到context了，闭包
+  let res = obj.fn(...arr)
+  // 要删除 fn
+  delete obj.fn
+  return res
 }
 const obj = {
-	name: 'alex'
+  name: 'alex'
 }
 const myApplyTestFn = function(a, b) {
-	console.log(a,b)
-	console.log(this.name)
+  console.log(a,b)
+  console.log(this.name)
 }
 console.log('myCall', myApplyTestFn.myCall(obj, 1,2))
 console.log('myApply', myApplyTestFn.myApply(obj, [1,2]))
 
 // my bind
 Function.prototype.myBind = function(context) {
-	const fn = this
-	const args = [...arguments].slice(1)
+  const fn = this
+  const args = [...arguments].slice(1)
 
-	return function(...innerArgs) {
-		let moreArgs = [...args, ...innerArgs]
-		return fn.apply(context, moreArgs)
-	}
+  return function(...innerArgs) {
+    let moreArgs = [...args, ...innerArgs]
+    return fn.apply(context, moreArgs)
+  }
 }
 const context = {
-	name: 'alex'
+  name: 'alex'
 }
 const myBindTestFn = function(name, age, school){
-	console.log(name) // 'Ann'
-	console.log(age) // 32
-	console.log(school) // '126'
+  console.log(name) // 'Ann'
+  console.log(age) // 32
+  console.log(school) // '126'
 }
 let myBindFn = myBindTestFn.myBind(context, 'Ann')
 myBindFn(32, '126')
@@ -418,28 +426,28 @@ console.log(jsonToString(jsonToStringTest))
 
 // my trim
 String.prototype.myTrim = function() {
-	let str = this
-	const trimLeft = function(string) {
-		for (let i = 0; i < string.length; i++) {
-			if (string.charAt(i) !== ' ') {
-				return string.substring(i, string.length)
-			}
-		}
+  let str = this
+  const trimLeft = function(string) {
+    for (let i = 0; i < string.length; i++) {
+      if (string.charAt(i) !== ' ') {
+        return string.substring(i, string.length)
+      }
+    }
 
-		return string
-	}
+    return string
+  }
 
-	const trimRight = function(string) {
-		for (let i = string.length - 1; i >= 0; i--) {
-			if (string.charAt(i) !== ' ') {
-				return string.substring(0, i + 1)
-			}
-		}
+  const trimRight = function(string) {
+    for (let i = string.length - 1; i >= 0; i--) {
+      if (string.charAt(i) !== ' ') {
+        return string.substring(0, i + 1)
+      }
+    }
 
-		return string
-	}
+    return string
+  }
 
-	return trimRight(trimLeft(str))
+  return trimRight(trimLeft(str))
 }
 console.log('        123123123    '.myTrim())
 
@@ -475,35 +483,35 @@ console.log('        123123123    '.myTrim())
 }
 */
 const dom2json = function(domTree) {
-	// create an obj
-	let obj = {}
-	// get the tag name
-	obj.tag = domTree.tagName
-	// setup array for children
-	obj.children = []
-	// iterate each child node
-	domTree.childNodes.forEach((child) => {
-		// dfs, it will return json of this child
-		obj.children.push(dom2json(child))
-	})
-	return obj
+  // create an obj
+  let obj = {}
+  // get the tag name
+  obj.tag = domTree.tagName
+  // setup array for children
+  obj.children = []
+  // iterate each child node
+  domTree.childNodes.forEach((child) => {
+    // dfs, it will return json of this child
+    obj.children.push(dom2json(child))
+  })
+  return obj
 }
 
 // my curry
 const myCurry = function(fn) {
-	// fn.length gives the length of arguments of fn
-	let length = fn.length
-	// get arguments from myCurry
-	let args = [...arguments].slice(1)
+  // fn.length gives the length of arguments of fn
+  let length = fn.length
+  // get arguments from myCurry
+  let args = [...arguments].slice(1)
 
-	return function(...innerArgs) {
-		// concat myCurry and currying arguments
-		let moreArgs = [...args, ...innerArgs]
-		// if current length === fn.length, we can return the result
-		if (length === moreArgs.length) return fn.apply(this, moreArgs)
-		// if not yet finished, recursion and call myCurry.apply with the correct arguments
-		else return myCurry.apply(this, [fn, ...moreArgs])
-	}
+  return function(...innerArgs) {
+    // concat myCurry and currying arguments
+    let moreArgs = [...args, ...innerArgs]
+    // if current length === fn.length, we can return the result
+    if (length === moreArgs.length) return fn.apply(this, moreArgs)
+    // if not yet finished, recursion and call myCurry.apply with the correct arguments
+    else return myCurry.apply(this, [fn, ...moreArgs])
+  }
 }
 function sum(a, b, c) {
   return a + b + c;
